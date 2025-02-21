@@ -23,9 +23,9 @@ public class MyApp {
             }
             session.persistAll();
 
-            PrintFist10Posts(posts);
+            //PrintFist10Posts(posts);
 
-            //UserInput();
+            UserInput();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -34,33 +34,41 @@ public class MyApp {
     }
 
 
-    public static void UserInput(){
+    public static void UserInput() {
         Scanner scanner = new Scanner(System.in);
-        System.out.print("\nPlease Enter Post ID: ");
-        String inputPostId = scanner.nextLine().trim();
+        while (true) {
+            System.out.print("\nPlease Enter Post ID (or type 'exit' to quit): ");
+            String inputPostId = scanner.nextLine().trim();
 
-        if (!inputPostId.isEmpty()) {
-            Post queriedPost = (Post) Session.getredisSession().load(Post.class, inputPostId);
-            if (queriedPost != null) {
-                //System.out.println("\nLoad Post ID Success！");
-                //  System.out.println("> " + queriedPost.getPostContent());
+            if (inputPostId.equalsIgnoreCase("exit")) {
+                System.out.println("Exiting UserInput mode...");
+                break;
+            }
 
+            // 加载 Post
+            Post post = (Post) Session.getredisSession().load(Post.class, inputPostId);
 
-                List<String> replyIds = queriedPost.getReplyIds();
-                if (replyIds != null && !replyIds.isEmpty()) {
-                    for (String replyId : replyIds) {
-                        Post replyPost = (Post) Session.getredisSession().load(Post.class, replyId);
-                        if (replyPost != null) {
-                            // System.out.println("> --> " + replyPost.getPostContent());
-                        }
+            if (post != null) {
+                // 成功查询到 Post
+                System.out.println("\nLoad Post Successfully...");
+                System.out.println("Post Content: " + post.getPostContent());
+                System.out.println("Reply IDs:    " + (post.getReplyIds() != null ? post.getReplyIds() : "[]"));
+                List<String> replyTexts = post.getReplyTexts();
+                if (!replyTexts.isEmpty()) {
+                    System.out.println("  Replies:");
+                    for (String replyText : replyTexts) {
+                        System.out.println("            " + replyText);
                     }
-
+                } else {
+                    System.out.println("     No Replies Found.");
                 }
+            } else {
+                System.out.println("Post Not Found. Please try again.");
             }
         }
-
         scanner.close();
     }
+
     public  static void TestIfGotPostsFromJson(int count, Post post) {
         if (count <=20) {
             System.out.println("\n========== DEBUG: Loading Posts =========="+ "    Number Of   "+ count);
@@ -71,7 +79,7 @@ public class MyApp {
 
     public static void PrintFist10Posts(List<Post> posts) {
         int J= 0;
-        for (int i = 0; i < Math.min(posts.size(), 10); i++) {
+        for (int i = 0; i < Math.min(posts.size(), 2); i++) {
             String postId = posts.get(i).getPostId();
 
             Post loadedPost = (Post) Session.getredisSession().load(Post.class, postId);
@@ -83,6 +91,9 @@ public class MyApp {
                 System.out.println("✅ Post Content:         " + loadedPost.getPostContent());
                 System.out.println("✅ Reply IDs from Redis: " +
                         (loadedPost.getReplyIds() != null ? loadedPost.getReplyIds() : "[]"));
+
+
+                //System.out.println("\uD83D\uDCCC" + loadedPost.getReplyTexts());
             }
         }
     }

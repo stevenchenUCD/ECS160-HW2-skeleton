@@ -12,14 +12,14 @@ public class Post {
 
     @PersistableField
     @SerializedName("thread")
-    private Thread thread;
+    private Post.Thread thread;
 
     @PersistableField
     @PersistableListField(className = "Post")
     private List<String> replyIds;
 
     @PersistableId
-   private String postId;
+    private String postId;
 
 
     public String getPostId() {
@@ -64,6 +64,22 @@ public class Post {
 
     private String formatURL(String text) {if (text == null) return null;text = text.replaceAll("[\\n\\r]", " ");return text.replaceAll("(https?://\\S+|\\S+\\.\\S+)", "[link]");}
 
+    public List<String> getReplyTexts() {
+        if (this.getReplies() == null) {
+            return List.of();
+        }
+
+        return this.getReplies().stream()
+                .map(reply -> {
+                    if (reply.getPost() != null && reply.getPost().getRecord() != null) {
+                        return reply.getPost().getRecord().getText();
+                    }
+                    return "(No text available)";
+                })
+                .toList();
+    }
+
+
 
     @Override
     public String toString() {
@@ -83,7 +99,7 @@ public class Post {
 
         @PersistableListField(className = "Post")
         @SerializedName("replies")
-        private List<Thread> replies;
+        private List<Post.Thread> replies;
 
         public PostData getPost() {
             return post;
