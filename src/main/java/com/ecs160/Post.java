@@ -45,16 +45,18 @@ public class Post {
 
     public List<String> getReplyIds() {
         if (getReplies() != null) {
-            replyIds = getReplies().stream()
+            this.replyIds = getReplies().stream()
                     .map(t -> t.getPost().getCid())
                     .toList();
         } else {
-            replyIds = Collections.singletonList("[]");
+            this.replyIds = List.of();
         }
         return replyIds;
     }
 
     public void setReplyIds(List<String> replyIds) {
+        System.out.println("✅ Debug: setReplyIds 被调用, replyIds = " + replyIds);
+
         this.replyIds = replyIds;
     }
 

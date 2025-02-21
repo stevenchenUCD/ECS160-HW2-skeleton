@@ -56,38 +56,29 @@ public class Session {
 
     public void persistAll() {
 
-        int c = 0;
         for (Map.Entry<String, Object> entry : cache.entrySet()) {
             String key = entry.getKey();
             Object obj = entry.getValue();
-            c++;
-            if (c <= 20)
-            {
-                if (obj instanceof Post p) {
-                    System.out.println("🔍 Debug: replyIds = " + p.getReplyIds());
-                }
+
+            if (obj instanceof Post p) {p.getReplyIds();} //Nor sure if this is allowed....
+                                                          // but I really spent over 10 hours to findi hits  solution
 
 
-                System.out.println("++++++++++++++++++++++++++++++++++++++");
-            }
             jedisSession.hset(key, "data", gson.toJson(obj));
 
             for (Field field : obj.getClass().getDeclaredFields()) {
                 field.setAccessible(true);
                 if (field.isAnnotationPresent(PersistableListField.class)) {
                     try {
-                        List<?> list = (List<?>) field.get(obj);
-                        if (list != null) {
-                            List<String> ids = list.stream()
-                                    .map(item -> {
-                                        String id = getObjectId(item);
-                                        return id;
-                                    })
-                                    .toList();
-                            String replyIds = String.join(",", ids);
+                            //System.out.println("This is field.get(obj)" + field.get(obj));
+                            //System.out.println("This is replyIds    " + replyIds);
+                            //System.out.println("This is ReplyIds       " + replyIds);
 
-                            jedisSession.hset(key, field.getName(), replyIds);
-                           }
+                             List<String> replyIdsList = (List<String>) field.get(obj);
+                             String replyIds = String.join(",", replyIdsList);
+
+                             jedisSession.hset(key, field.getName(), replyIds);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -101,6 +92,7 @@ public class Session {
 
 
     public Object load(Class<?> clazz, String postId) {
+
         if (postId == null || clazz == null) {
             return null;
         }
