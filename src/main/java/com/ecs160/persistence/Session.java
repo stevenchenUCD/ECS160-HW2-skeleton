@@ -68,6 +68,7 @@ public class Session {
 
             for (Field field : obj.getClass().getDeclaredFields()) {
                 field.setAccessible(true);
+
                 if (field.isAnnotationPresent(PersistableListField.class)) {
                     try {
                             //System.out.println("This is field.get(obj)" + field.get(obj));
@@ -77,6 +78,7 @@ public class Session {
                              String replyIds = String.join(",", replyIdsList);
                              //System.out.println("This is replyIds:      " + replyIds);
                              jedisSession.hset(key, field.getName(), replyIds);
+                       // System.out.println("Saving to Redis  Key: " + key + ", Field: " + field.getName() + ", Value: " + replyIds);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -91,19 +93,28 @@ public class Session {
 
 
     public Object load(Class<?> clazz, String postId) {
-
         if (postId == null || clazz == null) {
             return null;
         }
 
         String key = clazz.getSimpleName() + ":" + postId;
         Map<String, String> redisData = jedisSession.hgetAll(key);
+
         if (redisData.isEmpty()) {
             return null;
         }
 
         try {
-            return gson.fromJson(redisData.get("data"), clazz);
+            Post post = gson.fromJson(redisData.get("data"), Post.class);
+
+            // 解析 replyIds 并转换为 Post 对象
+            if (redisData.containsKey("replyIds")) {
+                String replyIdsStr = redisData.get("replyIds");
+                List<String> replyIdsList = replyIdsStr.isEmpty() ? List.of() : Arrays.asList(replyIdsStr.split(","));
+                post.setReplyIds(replyIdsList);
+            }
+
+            return post;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
