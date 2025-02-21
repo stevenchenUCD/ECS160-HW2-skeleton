@@ -40,7 +40,7 @@ public class Post {
         if (thread != null && thread.getReplies() != null) {
             return thread.getReplies();
         }
-        return List.of();  // 返回空列表，避免 null
+        return List.of();
     }
 
     public List<String> getReplyIds() {

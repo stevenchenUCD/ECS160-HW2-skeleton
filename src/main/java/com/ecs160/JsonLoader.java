@@ -20,7 +20,7 @@ public class JsonLoader {
 
             /*
             for (int i = 0; i < Math.min(posts.size(), 10); i++) {
-                System.out.println("✅ 加载 Post ID: " + posts.get(i).getPostId());
+                System.out.println("加载 Post ID: " + posts.get(i).getPostId());
             }
             */
             return posts;
