@@ -73,10 +73,9 @@ public class Session {
                             //System.out.println("This is field.get(obj)" + field.get(obj));
                             //System.out.println("This is replyIds    " + replyIds);
                             //System.out.println("This is ReplyIds       " + replyIds);
-
                              List<String> replyIdsList = (List<String>) field.get(obj);
                              String replyIds = String.join(",", replyIdsList);
-
+                             //System.out.println("This is replyIds:      " + replyIds);
                              jedisSession.hset(key, field.getName(), replyIds);
 
                     } catch (Exception e) {
@@ -110,6 +109,9 @@ public class Session {
             return null;
         }
     }
+
+
+
 
     private Field getPersistableIdField(Object obj) {
         for (Field field : obj.getClass().getDeclaredFields()) {

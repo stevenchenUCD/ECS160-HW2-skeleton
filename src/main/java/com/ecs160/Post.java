@@ -55,8 +55,6 @@ public class Post {
     }
 
     public void setReplyIds(List<String> replyIds) {
-        System.out.println("✅ Debug: setReplyIds 被调用, replyIds = " + replyIds);
-
         this.replyIds = replyIds;
     }
 

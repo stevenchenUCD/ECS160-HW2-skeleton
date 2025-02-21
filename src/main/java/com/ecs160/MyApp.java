@@ -23,7 +23,7 @@ public class MyApp {
             }
             session.persistAll();
 
-            //PrintFist10Posts(posts);
+            PrintFist10Posts(posts);
 
             //UserInput();
 
@@ -77,9 +77,11 @@ public class MyApp {
             Post loadedPost = (Post) Session.getredisSession().load(Post.class, postId);
             if (loadedPost != null) {
 
-                System.out.println("Post ID: " + loadedPost.getPostId());
-                System.out.println("Post Content: " + loadedPost.getPostContent());
-                System.out.println("Reply IDs from Redis: " +
+                System.out.println("\n========== DEBUG: Loading Posts From Redis ==========");
+
+                System.out.println("✅ Post ID:              " + loadedPost.getPostId());
+                System.out.println("✅ Post Content:         " + loadedPost.getPostContent());
+                System.out.println("✅ Reply IDs from Redis: " +
                         (loadedPost.getReplyIds() != null ? loadedPost.getReplyIds() : "[]"));
             }
         }
