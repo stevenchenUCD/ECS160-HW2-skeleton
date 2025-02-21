@@ -2,6 +2,9 @@ package com.ecs160;
 
 import com.ecs160.persistence.*;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Persistable
@@ -11,8 +14,19 @@ public class Post {
     @SerializedName("thread")
     private Thread thread;
 
+    @PersistableField
+    @PersistableListField(className = "Post")
+    private List<String> replyIds;
+
+    @PersistableId
+   private String postId;
+
+
     public String getPostId() {
-        return (thread != null && thread.post != null) ? thread.post.getCid() : null;
+        if (postId == null && thread != null && thread.post != null) {
+            postId = thread.post.getCid();
+        }
+        return postId;
     }
 
     public String getPostContent() {
@@ -21,18 +35,43 @@ public class Post {
         }
         return null;
     }
-    private String formatURL(String text) {if (text == null) return null;text = text.replaceAll("[\\n\\r]", " ");return text.replaceAll("(https?://\\S+|\\S+\\.\\S+)", "[link]");}
-    // ✅ 直接返回 `thread.replies`，不涉及数据库、不做懒加载
+
     public List<Thread> getReplies() {
-        return (thread != null) ? thread.getReplies() : null;
+        if (thread != null && thread.getReplies() != null) {
+            return thread.getReplies();
+        }
+        return List.of();  // 返回空列表，避免 null
     }
+
+    public List<String> getReplyIds() {
+        if (getReplies() != null) {
+            replyIds = getReplies().stream()
+                    .map(t -> t.getPost().getCid())
+                    .toList();
+        } else {
+            replyIds = Collections.singletonList("[]");
+        }
+        return replyIds;
+    }
+
+    public void setReplyIds(List<String> replyIds) {
+        this.replyIds = replyIds;
+    }
+
+    public void setPostId(String postId) {
+        this.postId = postId;
+    }
+
+    private String formatURL(String text) {if (text == null) return null;text = text.replaceAll("[\\n\\r]", " ");return text.replaceAll("(https?://\\S+|\\S+\\.\\S+)", "[link]");}
+
 
     @Override
     public String toString() {
         return "Post{" +
                 "postId=" + getPostId() +
                 ", postContent='" + getPostContent() + '\'' +
-                ", replies=" + (getReplies() != null ? getReplies().size() : 0) +
+                ", replies=" + (getReplies() != null ?
+                getReplies().stream().map(t -> t.getPost().getCid()).toList() : "[]")  +
                 '}';
     }
 
@@ -53,6 +92,10 @@ public class Post {
         public List<Thread> getReplies() {
             return replies;
         }
+        public void setReplies(List<Thread> replies) {
+            this.replies = replies;
+        }
+
     }
 
 

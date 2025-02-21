@@ -2,62 +2,87 @@ package com.ecs160;
 
 
 import com.ecs160.persistence.Session;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.stream.JsonReader;
-
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URISyntaxException;
+import java.util.Scanner;
 import java.util.List;
 
 public class MyApp {
     public static void main(String[] args) {
+
+
+        Session.getredisSession().CleanDataBase();
+
         try {
-            // ✅ 读取 JSON 文件
             String filePath = "src/main/resources/input.json";
             List<Post> posts = JsonLoader.loadPosts(filePath);
-            System.out.println("✅ 成功加载 " + posts.size() + " 个帖子！");
+            int count = 0;
+            Session session = Session.getredisSession();
+            for (Post post : posts) {
 
-            // ✅ 遍历前 20 个帖子
-            for (Post post : posts.subList(0, Math.min(posts.size(), 20))) {
-                System.out.println("😎 " + post);
-
-                // ✅ 遍历 replies，确保不会报错
-                if (post.getReplies() != null && !post.getReplies().isEmpty()) {
-                    for (Post.Thread reply : post.getReplies()) {  // ✅ 修正 `getReplies()` 调用
-                        if (reply.getPost() != null) {
-                            System.out.println("  ↳ Reply ID: " + reply.getPost().getCid());
-                            System.out.println("  ↳ Reply Content: " +
-                                    (reply.getPost().getRecord() != null ? reply.getPost().getRecord().getText() : "null"));
-                        }
-                    }
-                }
+                session.add(post);
+                //TestIfGotPostsFromJson(count,post);
             }
+            session.persistAll();
+
+            //PrintFist10Posts(posts);
+
+            //UserInput();
+
         } catch (Exception e) {
-            System.err.println("❌ 解析 JSON 失败：" + e.getMessage());
             e.printStackTrace();
         }
+
     }
+
+
+    public static void UserInput(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("\nPlease Enter Post ID: ");
+        String inputPostId = scanner.nextLine().trim();
+
+        if (!inputPostId.isEmpty()) {
+            Post queriedPost = (Post) Session.getredisSession().load(Post.class, inputPostId);
+            if (queriedPost != null) {
+                //System.out.println("\nLoad Post ID Success！");
+                //  System.out.println("> " + queriedPost.getPostContent());
+
+
+                List<String> replyIds = queriedPost.getReplyIds();
+                if (replyIds != null && !replyIds.isEmpty()) {
+                    for (String replyId : replyIds) {
+                        Post replyPost = (Post) Session.getredisSession().load(Post.class, replyId);
+                        if (replyPost != null) {
+                            // System.out.println("> --> " + replyPost.getPostContent());
+                        }
+                    }
+
+                }
+            }
+        }
+
+        scanner.close();
+    }
+    public  static void TestIfGotPostsFromJson(int count, Post post) {
+        if (count <=20) {
+            System.out.println("\n========== DEBUG: Loading Posts =========="+ "    Number Of   "+ count);
+            System.out.println("\uD83D\uDCCC" + post);
+            System.out.println("✅ Debug: if have replies In the Posts：  " + post.getReplyIds());
+        }
+    }
+
+    public static void PrintFist10Posts(List<Post> posts) {
+        int J= 0;
+        for (int i = 0; i < Math.min(posts.size(), 10); i++) {
+            String postId = posts.get(i).getPostId();
+
+            Post loadedPost = (Post) Session.getredisSession().load(Post.class, postId);
+            if (loadedPost != null) {
+
+                System.out.println("Post ID: " + loadedPost.getPostId());
+                System.out.println("Post Content: " + loadedPost.getPostContent());
+                System.out.println("Reply IDs from Redis: " +
+                        (loadedPost.getReplyIds() != null ? loadedPost.getReplyIds() : "[]"));
+            }
+        }
+    }
+
 }
-/*
-public class MyApp {
-    public static void main(String[] args) {
-        Session session = Session.getInstance();
-
-        // ✅ 创建 `Post`
-        Post post = new Post();
-        post.setPostId("123");
-        post.setPostContent("Hello, world!");
-
-        // ✅ 存入 Redis
-        RedisDataBase.savePostToRedis(post);
-
-        // ✅ 读取 `Post`
-        Post loadedPost = RedisDataBase.loadPostFromRedis("123");
-        System.out.println("📌 Loaded Post: " + loadedPost);
-    }
-
- */
